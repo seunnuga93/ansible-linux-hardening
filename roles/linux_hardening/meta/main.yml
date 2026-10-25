@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: linux_hardening
+  namespace: seunnuga93
+  author: Seun Osinuga
+  description: Baseline hardening for Ubuntu and Rocky Linux servers
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: EL
+      versions: ["9"]
+dependencies: []

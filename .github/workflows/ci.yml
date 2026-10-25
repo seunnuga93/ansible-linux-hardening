@@ -1,0 +1,42 @@
+---
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tools
+        run: |
+          pip install "ansible-core>=2.16,<2.19" ansible-lint yamllint
+          ansible-galaxy collection install -r requirements.yml
+      - run: yamllint .
+      - run: ansible-lint
+      - run: ansible-playbook site.yml --syntax-check -i inventory/hosts.example.yml
+
+  molecule:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Molecule
+        run: pip install "ansible-core>=2.16,<2.19" "molecule>=24" "molecule-plugins[docker]" docker
+      - name: Converge, check idempotence and verify on Ubuntu 24.04 and Rocky Linux 9
+        run: molecule test
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"

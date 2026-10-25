@@ -1,0 +1,34 @@
+---
+- name: Create admin users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+    append: true
+    shell: /bin/bash
+    create_home: true
+  loop: "{{ linux_hardening_admin_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Install admin SSH keys
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_key }}"
+    exclusive: true
+  loop: "{{ linux_hardening_admin_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Allow admin users passwordless sudo
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/90-admins
+    content: |
+      # Managed by Ansible
+      {% for user in linux_hardening_admin_users %}
+      {{ user.name }} ALL=(ALL) NOPASSWD: ALL
+      {% endfor %}
+    owner: root
+    group: root
+    mode: "0440"
+    validate: visudo -cf %s
+  when: linux_hardening_admin_users | length > 0

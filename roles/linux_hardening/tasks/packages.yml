@@ -1,0 +1,12 @@
+---
+- name: Enable EPEL (fail2ban lives there on EL)
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install baseline packages
+  ansible.builtin.package:
+    name: "{{ linux_hardening_packages_common + (linux_hardening_packages_debian if ansible_os_family == 'Debian' else linux_hardening_packages_redhat) }}"
+    state: present
+    update_cache: "{{ ansible_os_family == 'Debian' }}"

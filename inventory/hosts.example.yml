@@ -1,0 +1,12 @@
+---
+# Copy to hosts.yml and fill in your servers.
+all:
+  children:
+    servers:
+      hosts:
+        web-01:
+          ansible_host: 203.0.113.10
+        db-01:
+          ansible_host: 203.0.113.11
+  vars:
+    ansible_user: ubuntu

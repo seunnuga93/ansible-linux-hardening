@@ -1,0 +1,58 @@
+---
+# Users that get a home dir, an SSH key and passwordless sudo.
+linux_hardening_admin_users: []
+#  - name: alice
+#    ssh_key: "ssh-ed25519 AAAA... alice@laptop"
+
+linux_hardening_packages_common:
+  - curl
+  - vim
+  - htop
+  - auditd
+  - fail2ban
+  - openssh-server
+  - python3-systemd
+linux_hardening_packages_debian:
+  - unattended-upgrades
+  - ufw
+linux_hardening_packages_redhat:
+  - dnf-automatic
+  - firewalld
+
+linux_hardening_ssh_port: 22
+linux_hardening_ssh_allow_groups: [sudo, wheel]
+linux_hardening_ssh_max_auth_tries: 3
+linux_hardening_ssh_client_alive_interval: 300
+
+# Ports opened in the host firewall in addition to SSH.
+linux_hardening_firewall_allowed_tcp_ports: []
+
+linux_hardening_disabled_services:
+  - avahi-daemon
+  - cups
+  - rpcbind
+
+linux_hardening_sysctl:
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.default.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.conf.all.log_martians: 1
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  net.ipv4.tcp_syncookies: 1
+  net.ipv6.conf.all.accept_redirects: 0
+  kernel.kptr_restrict: 2
+  kernel.dmesg_restrict: 1
+  kernel.randomize_va_space: 2
+  fs.suid_dumpable: 0
+
+linux_hardening_banner: |
+  Authorized access only. All activity may be monitored and reported.
+
+# Kernel parameters, firewall and auditd can't be changed from inside a container.
+# These default to off automatically when the target is a container (e.g. in Molecule).
+linux_hardening_in_container: "{{ ansible_virtualization_type in ['docker', 'container', 'podman'] }}"
+linux_hardening_manage_firewall: "{{ not linux_hardening_in_container }}"
+linux_hardening_apply_sysctl: "{{ not linux_hardening_in_container }}"
+linux_hardening_manage_auditd_service: "{{ not linux_hardening_in_container }}"

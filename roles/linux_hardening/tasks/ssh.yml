@@ -1,0 +1,24 @@
+---
+- name: Make sure sshd reads drop-in config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    line: Include /etc/ssh/sshd_config.d/*.conf
+    insertbefore: BOF
+  notify: Restart sshd
+
+- name: Write SSH hardening config
+  ansible.builtin.template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/10-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart sshd
+
+- name: Set login banner
+  ansible.builtin.copy:
+    dest: /etc/issue.net
+    content: "{{ linux_hardening_banner }}"
+    owner: root
+    group: root
+    mode: "0644"

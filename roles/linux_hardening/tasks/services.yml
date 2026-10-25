@@ -1,0 +1,11 @@
+---
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Stop and disable unneeded services
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop: "{{ linux_hardening_disabled_services }}"
+  when: (item ~ '.service') in ansible_facts.services

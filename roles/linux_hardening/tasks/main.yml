@@ -1,0 +1,24 @@
+---
+- name: Install packages
+  ansible.builtin.import_tasks: packages.yml
+
+- name: Configure admin users
+  ansible.builtin.import_tasks: users.yml
+
+- name: Harden SSH
+  ansible.builtin.import_tasks: ssh.yml
+
+- name: Apply kernel parameters
+  ansible.builtin.import_tasks: sysctl.yml
+
+- name: Configure firewall
+  ansible.builtin.import_tasks: firewall.yml
+
+- name: Configure auditing and intrusion prevention
+  ansible.builtin.import_tasks: audit.yml
+
+- name: Enable automatic security updates
+  ansible.builtin.import_tasks: updates.yml
+
+- name: Disable unneeded services
+  ansible.builtin.import_tasks: services.yml

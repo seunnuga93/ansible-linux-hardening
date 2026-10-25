@@ -1,0 +1,7 @@
+---
+profile: production
+exclude_paths:
+  - .github/
+  - molecule/default/molecule.yml
+mock_roles:
+  - linux_hardening

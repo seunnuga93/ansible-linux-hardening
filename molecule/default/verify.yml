@@ -1,0 +1,60 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Merged sshd config is valid
+      ansible.builtin.command: sshd -t
+      changed_when: false
+
+    - name: Read effective sshd settings
+      ansible.builtin.command: sshd -T -C user=testadmin,host=localhost,addr=127.0.0.1
+      register: sshd_effective
+      changed_when: false
+
+    - name: Root login and passwords are disabled
+      ansible.builtin.assert:
+        that:
+          - "'permitrootlogin no' in sshd_effective.stdout_lines"
+          - "'passwordauthentication no' in sshd_effective.stdout_lines"
+          - "'maxauthtries 3' in sshd_effective.stdout_lines"
+          - "'x11forwarding no' in sshd_effective.stdout_lines"
+
+    - name: Admin user exists in the sudo group
+      ansible.builtin.command: id -nG testadmin
+      register: admin_groups
+      changed_when: false
+
+    - name: Check admin groups
+      ansible.builtin.assert:
+        that: "('sudo' if ansible_os_family == 'Debian' else 'wheel') in admin_groups.stdout.split()"
+
+    - name: Sudoers drop-in passes visudo
+      ansible.builtin.command: visudo -cf /etc/sudoers.d/90-admins
+      changed_when: false
+
+    - name: Stat hardening files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: hardening_files
+      loop:
+        - /etc/sysctl.d/99-hardening.conf
+        - /etc/audit/rules.d/hardening.rules
+        - /etc/fail2ban/jail.d/sshd.local
+        - /etc/issue.net
+
+    - name: Hardening files exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "{{ item.item }} is missing"
+      loop: "{{ hardening_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Collect service state
+      ansible.builtin.service_facts:
+
+    - name: Fail2ban is running
+      ansible.builtin.assert:
+        that: ansible_facts.services['fail2ban.service'].state == 'running'
